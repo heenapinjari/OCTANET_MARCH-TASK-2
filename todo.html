@@ -1,0 +1,315 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>My Todo App</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600&display=swap');
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Poppins', sans-serif;
+            background-color: #f5f5f5;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+        }
+
+        .container {
+            background-color: #fff;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            max-width: 600px;
+            width: 100%;
+        }
+
+        header {
+            display: flex;
+            align-items: center;
+            margin-bottom: 20px;
+            color: #3c64b1;
+            /* Change header color to blue */
+        }
+
+        header h1 {
+            margin-left: 10px;
+        }
+
+        .input-area {
+            display: flex;
+            margin-bottom: 20px;
+        }
+
+        #task-input {
+            flex: 1;
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 5px 0 0 5px;
+            outline: none;
+            font-size: 16px;
+        }
+
+        #add-task {
+            background-color: #3c64b1;
+            /* Change button color to blue */
+            color: #fff;
+            border: none;
+            border-radius: 0 5px 5px 0;
+            padding: 10px 20px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: background-color 0.3s ease;
+            display: flex;
+            align-items: center;
+        }
+
+        #add-task i {
+            margin-right: 5px;
+        }
+
+        #add-task:hover {
+            background-color: #335696;
+            /* Change button hover color */
+        }
+
+        .filters {
+            display: flex;
+            align-items: center;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+            /* Allow filters to wrap on small screens */
+        }
+
+        .filters span {
+            margin-right: 10px;
+            font-weight: 600;
+            color: #333;
+        }
+
+        .filters button {
+            background-color: #f1f1f1;
+            color: #333;
+            border: none;
+            padding: 5px 10px;
+            border-radius: 5px;
+            cursor: pointer;
+            margin-right: 5px;
+            margin-bottom: 5px;
+            /* Add margin bottom for small screens */
+            transition: background-color 0.3s ease;
+        }
+
+        .filters button.active {
+            background-color: #3c64b1;
+            /* Change active filter button color to blue */
+            color: #fff;
+        }
+
+        .filters button:hover {
+            background-color: #ddd;
+        }
+
+        #task-list {
+            list-style-type: none;
+            padding: 0;
+        }
+
+        #task-list li {
+            background-color: #f9f9f9;
+            padding: 10px;
+            border-radius: 5px;
+            margin-bottom: 10px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        #task-list li span {
+            flex: 1;
+            cursor: pointer;
+        }
+
+        #task-list li span.completed {
+            text-decoration: line-through;
+            color: #ccc;
+        }
+
+        #task-list li button {
+            background-color: #f44336;
+            color: #fff;
+            border: none;
+            padding: 5px 10px;
+            border-radius: 5px;
+            cursor: pointer;
+            margin-left: 10px;
+        }
+
+        #task-list li button:hover {
+            background-color: #d32f2f;
+        }
+
+        #task-list li span.due-date {
+            background-color: #ffc107;
+            color: #333;
+            padding: 2px 5px;
+            border-radius: 5px;
+            font-size: 12px;
+            margin-left: 10px;
+        }
+
+        @media (max-width: 480px) {
+            .container {
+                padding: 10px;
+            }
+
+            .input-area {
+                flex-direction: column;
+            }
+
+            #task-input {
+                border-radius: 5px;
+                margin-bottom: 10px;
+            }
+
+            #add-task {
+                border-radius: 5px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <header>
+            <h1><i class="fas fa-check"></i> My Todo App</h1>
+        </header>
+        <div class="input-area">
+            <input type="text" id="task-input" placeholder="Add new..">
+            <button id="add-task"><i class="fas fa-plus"></i> Add</button>
+        </div>
+        <div class="filters">
+            <span>Filter</span>
+            <button id="filter-all" class="active">All</button>
+            <button id="filter-completed">Completed</button>
+            <button id="filter-incomplete">Incomplete</button>
+            <span>Sort</span>
+            <button id="sort-date" class="active"><i class="fas fa-sort-numeric-down"></i> Added date</button>
+        </div>
+        <ul id="task-list"></ul>
+    </div>
+    <script src="https://kit.fontawesome.com/yourfontawesomekit.js" crossorigin="anonymous"></script>
+    <script>
+        const taskInput = document.getElementById('task-input');
+        const addTaskBtn = document.getElementById('add-task');
+        const taskList = document.getElementById('task-list');
+        const filterButtons = document.querySelectorAll('.filters button');
+        const sortDateBtn = document.getElementById('sort-date');
+
+        let tasks = [];
+        let currentFilter = 'all';
+        let sortByDate = true;
+
+        addTaskBtn.addEventListener('click', addTask);
+        taskList.addEventListener('click', toggleTask);
+        filterButtons.forEach(button => button.addEventListener('click', filterTasks));
+        sortDateBtn.addEventListener('click', sortTasks);
+
+        function addTask() {
+            const taskText = taskInput.value.trim();
+            if (taskText) {
+                const taskItem = {
+                    text: taskText,
+                    completed: false,
+                    dueDate: null
+                };
+
+                tasks.push(taskItem);
+                renderTasks();
+                taskInput.value = '';
+            }
+        }
+
+        function renderTasks() {
+            taskList.innerHTML = '';
+            const filteredTasks = tasks.filter(task => {
+                if (currentFilter === 'all') {
+                    return true;
+                } else if (currentFilter === 'completed') {
+                    return task.completed;
+                } else {
+                    return !task.completed;
+                }
+            });
+
+            if (sortByDate) {
+                filteredTasks.sort((a, b) => new Date(b.dueDate) - new Date(a.dueDate));
+            }
+
+            filteredTasks.forEach(task => {
+                const taskItem = document.createElement('li');
+                const taskSpan = document.createElement('span');
+                const deleteBtn = document.createElement('button');
+                const dueDate = document.createElement('span');
+
+                taskSpan.textContent = task.text;
+                taskSpan.classList.toggle('completed', task.completed);
+                deleteBtn.textContent = 'Delete';
+
+                if (task.dueDate) {
+                    dueDate.textContent = formatDate(task.dueDate);
+                    dueDate.classList.add('due-date');
+                    taskItem.appendChild(dueDate);
+                }
+
+                taskItem.appendChild(taskSpan);
+                taskItem.appendChild(deleteBtn);
+                taskList.appendChild(taskItem);
+            });
+        }
+
+        function toggleTask(e) {
+            if (e.target.tagName === 'SPAN') {
+                const taskText = e.target.textContent;
+                const task = tasks.find(t => t.text === taskText);
+                task.completed = !task.completed;
+                renderTasks();
+            } else if (e.target.tagName === 'BUTTON') {
+                const taskText = e.target.previousElementSibling.textContent;
+                tasks = tasks.filter(t => t.text !== taskText);
+                renderTasks();
+            }
+        }
+
+        function filterTasks(e) {
+            currentFilter = e.target.id.split('-')[1];
+            filterButtons.forEach(button => button.classList.remove('active'));
+            e.target.classList.add('active');
+            renderTasks();
+        }
+
+        function sortTasks() {
+            sortByDate = !sortByDate;
+            sortDateBtn.innerHTML = sortByDate ? '<i class="fas fa-sort-numeric-down"></i> Added date' : '<i class="fas fa-sort-numeric-down-alt"></i> Added date';
+            renderTasks();
+        }
+
+        function formatDate(dateString) {
+            const date = new Date(dateString);
+            const options = { day: 'numeric', month: 'short', year: 'numeric' };
+            return date.toLocaleDateString('en-US', options);
+        }
+
+        renderTasks();
+    </script>
+</body>
+
+</html>
